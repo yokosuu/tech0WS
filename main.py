@@ -1,12 +1,5 @@
 import streamlit as st
-import requests
-import openai==0.27.0 
-import json
-
-# ChatGPT APIキーの設定
-openai.api_key = "YOUR_OPENAI_API_KEY"
-import streamlit as st
-import openai
+import openai ==0.27.0 
 
 # Initialize OpenAI with your API key
 openai.api_key = 'YOUR_OPENAI_API_KEY'
