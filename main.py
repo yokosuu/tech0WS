@@ -1,6 +1,6 @@
 import streamlit as st
 import requests
-import openai
+import openai==0.27.0 
 import json
 
 # ChatGPT APIキーの設定
