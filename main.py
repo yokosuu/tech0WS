@@ -5,45 +5,52 @@ import json
 
 # ChatGPT APIキーの設定
 openai.api_key = "YOUR_OPENAI_API_KEY"
+import streamlit as st
+import openai
 
-# APIエンドポイントとJPOのAPIキー
-JPO_API_URL = "https://ip-data.jpo.go.jp/api/v1/patents"
-JPO_API_KEY = "YOUR_JPO_API_KEY"
+# Initialize OpenAI with your API key
+openai.api_key = 'YOUR_OPENAI_API_KEY'
 
-# キーワード入力のStreamlitフォーム
-st.title("JPO API Keyword Search and Initial Review with ChatGPT")
-keyword = st.text_input("Enter keyword to search patents")
+st.title("飲みすぎアラート")
 
-if keyword:
-    # JPO APIリクエストヘッダー
-    headers = {
-        "Authorization": f"Bearer {JPO_API_KEY}"
-    }
+# Sidebar for age, gender, and alcohol tolerance
+age = st.sidebar.number_input("年齢", min_value=18, max_value=100)
+gender = st.sidebar.selectbox("性別", ["男性", "女性", "その他"])
+tolerance = st.sidebar.radio("お酒強い・弱い（自覚）", ("強い", "普通", "弱い"))
 
-    # APIリクエスト
-    response = requests.get(f"{JPO_API_URL}?keyword={keyword}", headers=headers)
-    
-    if response.status_code == 200:
-        patents_data = response.json()
+# Initialize session state to store drinks
+if 'drinks' not in st.session_state:
+    st.session_state.drinks = []
 
-        # 取得データの表示
-        st.subheader(f"Results for '{keyword}'")
-        st.write(patents_data)  # 生データ表示（デバッグ用）
+# Buttons for drink selection
+if st.button("ビール大"):
+    st.session_state.drinks.append("ビール大")
+if st.button("ビール中"):
+    st.session_state.drinks.append("ビール中")
+if st.button("日本酒"):
+    st.session_state.drinks.append("日本酒")
+if st.button("ワイン"):
+    st.session_state.drinks.append("ワイン")
 
-        # 取得データをChatGPTに渡す（RAGプロセス）
-        context = json.dumps(patents_data)[:3000]  # 最大トークン数対策
-        response = openai.ChatCompletion.create(
-            model="gpt-4",
-            messages=[
-                {"role": "system", "content": "You are a helpful assistant."},
-                {"role": "user", "content": f"Please summarize the following patent data: {context}"}
-            ]
-        )
-        
-        # ChatGPTの要約結果を表示
-        chatgpt_summary = response["choices"][0]["message"]["content"]
-        st.subheader("Summary")
-        st.write(chatgpt_summary)
-        
-    else:
-        st.error("Failed to retrieve data from JPO API.")
+# Display the consumed drinks
+st.subheader("飲んだ内容:")
+st.write(", ".join(st.session_state.drinks))
+
+# Function to get advice using OpenAI LLM
+def get_drinking_advice(drinks, age, gender, tolerance):
+    # Create a prompt for OpenAI
+    prompt = f"私は{age}歳の{gender}です。自分はお酒が{tolerance}です。今日飲んだのは、{', '.join(drinks)}です。飲みすぎかどうか、いつもより多いか、明日の気分について教えてください。"
+
+    # Call OpenAI to get the advice
+    response = openai.Completion.create(
+        engine="text-davinci-003",
+        prompt=prompt,
+        max_tokens=150
+    )
+    return response.choices[0].text.strip()
+
+# Generate advice based on the drinks
+if st.session_state.drinks:
+    advice = get_drinking_advice(st.session_state.drinks, age, gender, tolerance)
+    st.subheader("アドバイス:")
+    st.write(advice)
