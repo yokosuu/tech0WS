@@ -1,5 +1,5 @@
 import streamlit as st
-import openai ==0.27.0 
+import openai =0.27.0 
 
 # Initialize OpenAI with your API key
 openai.api_key = 'YOUR_OPENAI_API_KEY'
